@@ -8,15 +8,9 @@ class Student(object):
         Initializes a student with courses
 
         """
-        self.student_id = student_id
+        self.id = student_id
         self.courses = courses
-
-    def numberCourses(self):
-        """
-        returns number of courses
-
-        """
-        return len(self.courses)
+        self.sessions = []
 
 class Course(object):
     """
@@ -27,9 +21,8 @@ class Course(object):
         Initializes a course with students
 
         """
-        self.name = name
+        self.id = name
         self.students = students
-        # self.sessions =
 
     def numberStudents(self):
         """
@@ -37,48 +30,51 @@ class Course(object):
 
         """
         return len(self.students)
+
 
 class Session(object):
     """
     A Session represents a certain session of a course.
     """
-    def __init__(self, session_type, course, students):
+    def __init__(self, session_id, session_type, course, students):
         """
         Initializes a session with students
 
         """
-        self.session_type = session_type
+        self.id = session_id
+        self.type = session_type
         self.course = course
         self.students = students
+        self.slot = ''
 
-    def numberStudents(self):
-        """
-        returns number of students
-
-        """
-        return len(self.students)
-
-class Room(object):
+class Slot(object):
     """
-    A Room represents a certain room.
+    A  slot represents a certain slot in a room.
     """
-    def __init__(self, name, capacity):
+    def __init__(self, day, block, room, capacity):
         """
-        Initializes a session with students
+        Initializes a time_slot in a room
 
         """
-        self.name= name
+        self.day = day
+        self.block = block
+        self.room = room
         self.capacity = capacity
-
 
 def main():
     '''
     Extracts data from original CSV file (studenten_roostering).
 
+    Creates random schedule.
+
     Outputs lists: student_list and course_list, which are lists of objects
     '''
     import csv
     import random
+
+    # declares constants
+    days = [0, 1, 2, 3, 4]
+    blocks = [0, 1, 2, 3]
 
     # open csv files and reads into csv-file
     f1 = open('studenten_roostering.csv')
@@ -113,8 +109,8 @@ def main():
             course_exists = False
             # checks if course already exists
             for course in course_list:
-                if course.name == course_student:
-                    course.students.append(student_id)
+                if course.id == course_student:
+                    course.students.append(student)
                     course_exists = True
             if course_exists == False:
                 if course_student != '':
@@ -122,7 +118,7 @@ def main():
                     students = []
                     course = Course(course_student, students)
                     course_list.append(course)
-                    course.students.append(student_id)
+                    course.students.append(student)
 
     # extracts the specifications of every course
     course_specifications = []
@@ -130,21 +126,23 @@ def main():
         course_specifications.append(csv_line)
 
     session_list = []
-
+    session_id = 0
     # creates different session objects for every course object
     for course in course_list:
         course_sessions = []
         num_students = course.numberStudents()
         for course_specification in course_specifications:
-            if course.name == course_specification[0]:
+            if course.id == course_specification[0]:
                 # creates lectures
                 num_lectures = int(course_specification[1])
                 for i in range(num_lectures):
                     session_type = "lecture"
-                    new_lecture = Session(session_type, course.name, course.students)
-                    # print new_lecture.course
+                    new_lecture = Session(session_id, session_type, course.id, course.students)
+                    session_id += 1
                     course_sessions.append(new_lecture)
                     session_list.append(new_lecture)
+                    for student in course.students:
+                        student.sessions.append(new_lecture)
 
                 # creates tutorials
                 if course_specification[2] != "0":
@@ -156,9 +154,12 @@ def main():
 
                         rest = rest[num_students_tutorial:]
                         session_type = "tutorial"
-                        new_tutorial = Session(session_type, course.name, students_tutorial)
+                        new_tutorial = Session(session_id, session_type, course.id, students_tutorial)
+                        session_id += 1
                         course_sessions.append(new_tutorial)
                         session_list.append(new_tutorial)
+                        for student in students_tutorial:
+                            student.sessions.append(new_tutorial)
 
                 # creates practica
                 if course_specification[4] != "0":
@@ -169,28 +170,23 @@ def main():
                         students_practicum = rest[:num_students_practicum]
                         rest = rest[num_students_practicum:]
                         session_type = "practicum"
-                        new_practicum = Session(session_type, course.name, students_practicum)
+                        new_practicum = Session(session_id, session_type, course.id, students_practicum)
+                        session_id += 1
                         course_sessions.append(new_practicum)
                         session_list.append(new_practicum)
+                        for student in students_practicum:
+                            student.sessions.append(new_practicum)
 
     # extracts the specifications of every room
     room_specifications = [["A1.04",41], ["A1.06",22], ["A1.08",20,], ["A1.10",56], ["B0.201",48], ["C0.110",117], ["C1.112",60]]
 
-    # print len(session_list)
-    # for session in session_list:
-    #     session.session_type
-    #     print session.course
-    #     print session.students
-
-    # creates room objects
-    room_list = []
+    # creates slot objects
+    slot_list = []
     for room_specification in room_specifications:
-        new_room = Room(room_specification[0], room_specification[1])
-        # print new_room.name
-        # print new_room.capacity
-        room_list.append(new_room)
+        for day in days:
+            for block in blocks:
+                new_slot = Slot(day, block, room_specification[0], room_specification[1])
+                slot_list.append(new_slot)
 
-    # returns list of student objects and list of course objects
-    return [student_list, course_list, session_list, room_list]
-
-main()
+    # returns list of student, session and slot objects
+    return [session_list, slot_list]
