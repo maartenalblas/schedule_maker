@@ -60,7 +60,5 @@ def main(session_list):
         # subtract 1 point of fitness when student_conflict
         fitness, student_minus = student_conflict(session, fitness, student_minus, student_dict)
 
-    # to leverage the genetic algo
-    fitness -= 2000
 
     return fitness, capacity_minus, student_minus

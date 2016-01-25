@@ -51,11 +51,12 @@ class Slot(object):
     """
     A  slot represents a certain slot in a room.
     """
-    def __init__(self, day, block, room, capacity):
+    def __init__(self, slot_id, day, block, room, capacity):
         """
         Initializes a time_slot in a room
 
         """
+        self.id = slot_id
         self.day = day
         self.block = block
         self.room = room
@@ -77,10 +78,11 @@ def main():
     blocks = [0, 1, 2, 3]
 
     # open csv files and reads into csv-file
-    f1 = open('studenten_roostering.csv')
+    f1 = open('student_specs.csv')
     csv_file_1 = csv.reader(f1)
-    f2 = open('vak_specificaties.csv')
-    csv_file_2 = csv.reader(f2, delimiter=';')
+    f2 = open('course_specs.csv')
+    csv_file_2 = csv.reader(f2)
+
 
     # empty list for student and course objects
     student_list = []
@@ -120,6 +122,7 @@ def main():
                     course_list.append(course)
                     course.students.append(student)
 
+
     # extracts the specifications of every course
     course_specifications = []
     for csv_line in csv_file_2:
@@ -131,6 +134,7 @@ def main():
     for course in course_list:
         course_sessions = []
         num_students = course.numberStudents()
+
         for course_specification in course_specifications:
             if course.id == course_specification[0]:
                 # creates lectures
@@ -178,15 +182,19 @@ def main():
                             student.sessions.append(new_practicum)
 
     # extracts the specifications of every room
-    room_specifications = [["A1.04",41], ["A1.06",22], ["A1.08",20,], ["A1.10",56], ["B0.201",48], ["C0.110",117], ["C1.112",60]]
+    room_specifications = [["A1.04",41], ["A1.06",22], ["C1.112",60]]
 
     # creates slot objects
+    slot_id = 0
     slot_list = []
     for room_specification in room_specifications:
         for day in days:
             for block in blocks:
-                new_slot = Slot(day, block, room_specification[0], room_specification[1])
+                new_slot = Slot(slot_id, day, block, room_specification[0], room_specification[1])
                 slot_list.append(new_slot)
+                slot_id += 1
 
     # returns list of student, session and slot objects
     return [session_list, slot_list]
+
+main()

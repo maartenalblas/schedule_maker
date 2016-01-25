@@ -12,6 +12,22 @@ def random_schedule(rand_schedule, slot_list):
         copy_list.remove(slot)
     return rand_schedule
 
+def truncation(old_generation):
+    fitness_list = []
+    for candidate in old_generation:
+        fitness_output = fitness_function.main(candidate)
+        fitness = fitness_output[0]
+        fitness_list.append(fitness)
+
+    selected_generation = []
+    avg_fitness = sum(fitness_list) / len(fitness_list)
+    for i in range(len(fitness_list)):
+        if fitness_list[i] > avg_fitness:
+            selected_generation.append(old_generation[i])
+
+    return selected_generation
+
+
 def make_roulette(old_generation):
 
     """ Determines the probabilities of the roulette_wheel (for selection)
@@ -21,6 +37,8 @@ def make_roulette(old_generation):
     for candidate in old_generation:
         fitness_output = fitness_function.main(candidate)
         fitness = fitness_output[0]
+        if fitness < 0:
+            fitness = 1
         fitness_list.append(fitness)
 
     angle = 0
@@ -31,14 +49,13 @@ def make_roulette(old_generation):
         roulette_wheel.append(angle)
     return fitness_list, roulette_wheel
 
-
 def selection(old_generation, roulette_wheel):
 
-    """ Selects two parents that will create offspring (with roulette_wheel)
+    """ Selects three parents that will create offspring (with roulette_wheel)
 
     """
     parents = []
-    for i in range(2):
+    for i in range(3):
         random_value = random.random()
         for j in range(len(roulette_wheel)):
             if roulette_wheel[j] > random_value:
@@ -47,218 +64,119 @@ def selection(old_generation, roulette_wheel):
     return parents
 
 
-def crossover(parents, slot_list):
+def insert_ok(session, available_slots):
 
-    """ Crossover of genes of parents into offspring
+    """ Returns true if timeslot of session is still available
 
     """
+    insert_ok = False
+    if session.slot.id in available_slots:
+        return True
+    return insert_ok
+
+def insert_session(session, offspring, available_slots):
+
+    """ Inserts session into offspring
+
+    """
+    offspring[session.id] = session
+    available_slots.remove(session.slot.id)
+
+
+def into_garage(session, offspring, garage):
+
+    """ Inserts session into offspring and garage
+
+    """
+    offspring[session.id] = session
+    garage.append(session.id)
+
+def repair_session(session_id , offspring, garage, available_slots, slot_list):
+
+    """ Repairs session in garage
+
+    """
+    available_slot = random.choice(available_slots)
+    available_slots.remove(available_slot)
+    offspring[session_id].slot = slot_list[available_slot]
+
+def crossover(parents, slot_list):
+
+    """ Crossover of 3 parents into 1 offspring
+
+    """
+
     # makes copies of the parents
     parent_x = list(parents[0])
     parent_y = list(parents[1])
+    parent_z = list(parents[2])
 
-    # makes copies of slot_list to check for empty slots
-    slot_list_x = list(slot_list)
-    slot_list_y = list(slot_list)
+    # is there a crossover?
+    if random.random() > crossover_rate:
+        return random.choice([parent_x, parent_y, parent_z])
 
     # instantiates offspring
-    offspring_x = []
-    offspring_y = []
+    offspring = ["" for i in range(len(parent_x))]
 
-    # instantiates garage
-    garage_x = []
-    garage_y = []
+    # slot id's that are still available in offspring
+    available_slots = [slot.id for slot in slot_list]
 
-    # switches between x => x, y => y to x => y, y => x
-    direction = "straight"
+    # sessions that need repair
+    garage = []
 
-    # empties all sessions of parents into offspring and garage
+    repairs = 0
+
+    # inserts all sessions in offspring and remembers which need repair
     for i in range(len(parent_x)):
-        # selects random session from parent x and y (different timeslot)
+
+        # pop session from parent  x, y and z
         index = random.randint(0, len(parent_x) - 1)
-        random_session_x = parent_x[index]
-        random_session_y = parent_y[index]
+        session_x = parent_x.pop(index)
+        session_y = parent_y.pop(index)
+        session_z = parent_z.pop(index)
 
-        # tries straight first, diagonal second, single straight third, single diagonal fourth
-        if direction == "straight":
-            straight_ok, straight_x_ok, straight_y_ok = is_straight_ok(offspring_x, offspring_y, random_session_x, random_session_y)
-            if straight_ok:
-                straight_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y)
-                del slot_list_x[index]
-                del slot_list_y[index]
-            else:
-                diagonal_ok, diagonal_x_ok, diagonal_y_ok = is_diagonal_ok(offspring_x, offspring_y, random_session_x, random_session_y)
-                if diagonal_ok:
-                    diagonal_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y, direction)
-                    del slot_list_x[index]
-                    del slot_list_y[index]
-                else:
-                    if straight_x_ok:
-                        single_switch(parent_x, offspring_x, random_session_x)
-                        into_garage(parent_y, garage_y, random_session_y)
-                        del slot_list_x[index]
-                    elif straight_y_ok:
-                        single_switch(parent_y, offspring_y, random_session_y)
-                        into_garage(parent_x, garage_x, random_session_x)
-                        del slot_list_y[index]
-                    else:
-                        if diagonal_x_ok:
-                            single_switch(parent_x, offspring_y, random_session_x)
-                            into_garage(parent_y, garage_x, random_session_y)
-                            del slot_list_x[index]
-                        elif diagonal_y_ok:
-                            single_switch(parent_y, offspring_x, random_session_y)
-                            into_garage(parent_x, garage_y, random_session_x)
-                            del slot_list_y[index]
-                        else:
-                            into_garage(parent_x, garage_x, random_session_x)
-                            into_garage(parent_y, garage_y, random_session_y)
-            direction = "diagonal"
-
-        # tries diagonal first, straight second, single diagonal third, single straight fourth
+        # decides the order of insertion
+        ran_value = random.random()
+        if ran_value < 0.33:
+            session_1 = session_x
+            session_2 = session_y
+            session_3 = session_z
+        elif ran_value >= 0.33 and ran_value <= 0.66:
+            session_1 = session_y
+            session_2 = session_z
+            session_3 = session_x
         else:
-            diagonal_ok, diagonal_x_ok, diagonal_y_ok = is_diagonal_ok(offspring_x, offspring_y, random_session_x, random_session_y)
-            if diagonal_ok:
-                diagonal_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y)
-                del slot_list_x[index]
-                del slot_list_y[index]
-            else:
-                straight_ok, straight_x_ok, straight_y_ok = is_straight_ok(offspring_x, offspring_y, random_session_x, random_session_y)
-                if straight_ok:
-                    straight_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y)
-                    del slot_list_x[index]
-                    del slot_list_y[index]
-                else:
-                    if diagonal_x_ok:
-                        single_switch(parent_x, offspring_y, random_session_x)
-                        into_garage(parent_y, garage_x, random_session_y)
-                        del slot_list_x[index]
-                    elif diagonal_y_ok:
-                        single_switch(parent_y, offspring_x, random_session_y)
-                        into_garage(parent_x, garage_y, random_session_x)
-                        del slot_list_y[index]
-                    else:
-                        if straight_x_ok:
-                            single_switch(parent_x, offspring_x, random_session_x)
-                            into_garage(parent_y, garage_y, random_session_y)
-                            del slot_list_x[index]
-                        elif straight_y_ok:
-                            single_switch(parent_y, offspring_y, random_session_y)
-                            into_garage(parent_x, garage_x, random_session_x)
-                            del slot_list_y[index]
-                        else:
-                            into_garage(parent_x, garage_y, random_session_x)
-                            into_garage(parent_y, garage_x, random_session_y)
-            direction = "straight"
+            session_1 = session_z
+            session_2 = session_x
+            session_3 = session_y
 
-    # assign empty timeslot to the sessions in garages
-    for session in garage_x:
-        empty_slot = random.choice(slot_list_x)
-        session.slot = empty_slot
-        slot_list_x.remove(empty_slot)
-    for session in garage_y:
-        empty_slot = random.choice(slot_list_y)
-        session.slot = empty_slot
-        slot_list_x.remove(empty_slot)
+        # checks for insertion and inserts session, else into garage
+        if insert_ok(session_1, available_slots):
+            insert_session(session_1, offspring, available_slots)
+        elif insert_ok(session_2, available_slots):
+            insert_session(session_2, offspring, available_slots)
+        elif insert_ok(session_3, available_slots):
+            insert_session(session_3, offspring, available_slots)
+        else:
+            into_garage(session_1, offspring, garage)
 
-    # Error checking
-    if len(offspring_x) == len(parent_x) or len(offspring_x) == len(parent_x):
-        print "!!!! Lenght of solution is not good !!!!!!"
+    # repairs sessions in garage
+    for session_id in garage:
+        repair_session(session_id, offspring, garage, available_slots, slot_list)
 
-    return offspring_x, offspring_y
-
-
-
-def is_straight_ok(offspring_x, offspring_y, random_session_x, random_session_y):
-
-    """ returns if straight switches can be done
-
-    """
-    straight_ok = True
-    straight_x_ok = True
-    straight_y_ok = True
-
-    for session in offspring_x:
-        if random_session_x is session:
-            straight_ok = False
-            straight_x_ok = False
-    for session in offspring_y:
-        if random_session_y is session:
-            straight_ok = False
-            straight_y_ok = False
-    return straight_ok, straight_x_ok, straight_y_ok
-
-def is_diagonal_ok(offspring_x, offspring_y, random_session_x, random_session_y):
-
-    """ returns if straight switches can be done
-
-    """
-    diagonal_ok = True
-    diagonal_x_ok = True
-    diagonal_y_ok = True
-
-    for session in offspring_x:
-        if random_session_y is session:
-            diagonal_ok = False
-            diagonal_x_ok = False
-    for session in offspring_y:
-        if random_session_x is session:
-            diagonal_ok = False
-            diagonal_y_ok = False
-    return diagonal_ok, diagonal_x_ok, diagonal_y_ok
-
-def straight_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y):
-
-    """ Does straight switch
-
-    """
-    parent_x.remove(random_session_x)
-    offspring_x.append(random_session_x)
-    parent_y.remove(random_session_y)
-    offspring_y.append(random_session_y)
-
-
-def diagonal_switch(parent_x, parent_y, offspring_x, offspring_y, random_session_x, random_session_y):
-
-    """ Does diagonal switch
-
-    """
-    parent_x.remove(random_session_x)
-    offspring_x.append(random_session_x)
-    parent_y.remove(random_session_y)
-    offspring_y.append(random_session_y)
-
-
-def single_switch(parent, offspring, random_session, slot_list):
-
-    """ Does single switch
-
-    """
-    parent.remove(random_session)
-    offspring.append(random_session)
-
-def into_garage(parent, garage, random_session):
-
-    """ switches session into garage for later use
-
-    """
-    parent.remove(random_session)
-    garage.append(random_session)
-
+    return offspring
 
 def mutation(offspring):
     """ Mutates some genes of the offspring by switching
 
     """
-    if random.random() > 0.1:
-
+    if random.random() < mutation_rate:
         random_1 = random.choice(offspring)
         random_2 = random.choice(offspring)
-
         bucket = random_1.slot
         random_1.slot = random_2.slot
         random_2.slot = bucket
 
-    return offspring
 
 def next_generation(old_generation, slot_list):
 
@@ -267,47 +185,52 @@ def next_generation(old_generation, slot_list):
     """
     new_generation = []
 
-    # designs the roulette_wheel for selection
-    fitness_list, roulette_wheel = make_roulette(old_generation)
+    # under half of population dies
+    selected_generation = truncation(old_generation)
+    new_generation.extend(selected_generation)
 
+    # designs the roulette_wheel for selection
+    fitness_list, roulette_wheel = make_roulette(selected_generation)
     # untill new_generation is complete
     while len(old_generation) > len(new_generation):
         # selection, crossover and mutation of parents into offspring
-        parents = selection(old_generation, roulette_wheel)
-        offspring_x, offspring_y = crossover(parents, slot_list)
-        mutated_x = mutation(offspring_x)
-        mutated_y = mutation(offspring_y)
-        new_generation.append(mutated_x)
-        new_generation.append(mutated_y)
+        parents = selection(selected_generation, roulette_wheel)
+        offspring = crossover(parents, slot_list)
+        mutation(offspring)
+        new_generation.append(offspring)
     return new_generation
 
-"""
-
-"""
 
 import preparation
 import fitness_function
 import random
-import csv
 
-# define constants for the algo
-# crossover_rate = 0.7
-# mutation_rate = 0.001
+global crossover_rate
+global mutation_rate
+global repairs
+
+# define constants
+crossover_rate = 0.7
+mutation_rate = 0.1
+population_size = 10
+number_generations = 1000
 
 # instantiates the framework of the schedule
 prep_schedule, slot_list = preparation.main()
 
-# creates 10 random schedules
+# creates 100 random schedules
 old_generation = []
-for i in range(100):
+for i in range(population_size):
     prep_schedule, slot_list = preparation.main()
     rand_schedule = random_schedule(prep_schedule, slot_list)
     old_generation.append(rand_schedule)
 
 generation = 0
 
+fitness_total = []
+
 # print results of algo
-for i in range(1000):
+for i in range(number_generations):
     new_generation = next_generation(old_generation, slot_list)
     old_generation = new_generation
     fitness_list = []
@@ -316,6 +239,7 @@ for i in range(1000):
     for schedule in old_generation:
         fitness, capacity_minus, student_minus = fitness_function.main(schedule)
         fitness_list.append(fitness)
+        fitness_total.append(fitness)
         capacity_list.append(capacity_minus)
         student_list.append(student_minus)
     print "Generation number: " + str(generation)
@@ -324,5 +248,12 @@ for i in range(1000):
     print "Av Student: " + str(sum(student_list) / len(student_list))
     print "Best Fitness: " + str(max(fitness_list))
     print "Best Capacity: " + str(min(capacity_list))
-    print "Best Student: " + str(min(student_list)) 
+    print "Best Student: " + str(min(student_list))
+    print "Worst Fitness: " + str(min(fitness_list))
+    print "Worst Capacity: " + str(max(capacity_list))
+    print "Worst Student: " + str(max(student_list))
+    print ""
     generation += 1
+
+print "Highest fitness total"
+print max(fitness_total)
