@@ -2,6 +2,10 @@
 
 " Create your own class schedule in the blink of an eye. You can use it for a university, college or high school. Just upload the data of your particular school, lean back, and let the hill climbing algorithm do the hard work. The algorithm optimizes your schedule untill ther are no confilcts of interest. So no overbooked rooms, no students that have two classes at the same time, and the sequence of the sessions are always correct. Present your data in the format that is comparable to the example in the csv-file directory and. "
 
+![](doc/index.png)
+
+![](doc/schedule.png)
+
 --- Het Process ----
 
 Kerstvakantie:
@@ -15,7 +19,7 @@ Begin van de week ben ik begonnen met het programmeren van het genetisch algorit
 
 Toen ik dat had gedaan kwam er al snel een tweede probleem om de hoek kijken. Als je twee roosters een crossover laat maken. Dus een deel van de eigenschappen van ouder 1 en een deel van ouder 2 in het nieuwe rooster. Dan creer je ofwel dubbele colleges of dubbele zaalslotten. Om dit probleem aan te pakken twijfelde ik tussen twee opties: of het algoritme foute roosters laten creeren en hopen dat hij op de lange termijn met goede eigenschappen terug keert naar een correct rooster, of het rooster repareren tot een weer geldig rooster maar de enkele eigenschappen van de ouders weggooien. Met Daan afgesproken om dit probleem te bespreken. en samen hebben we besloten om een zogenaamde grindtegel crossover te doen. Deze grondtegel crossover heeft de eigenschap dat hij de minste reparaties nodig heeft. In het plaatje hieronder moeten de zwarte stipjes de vakken voorstellen van ouder 1 op een bepaald tijdstip en de witte stipjes staan voor ouder 2.
 
-![](doc/grindtegel)
+![](doc/grindtegel.png)
 
 Week 3:
 In het begin van week 3 ben ik de grindtegel crossover gaan implemeteren. Omdat de crossover vrij complex is (checken of tijdslot vrij is, als vrij dan zetten, anders andere ouder proberen, etc, etc) moest ik het allemaal strak in me hoofd houden om het algoritme juist te programmeren. Op de woensdag had ik hem af en was ik klaar om de resultaten te testen. Wat bleek het algortime leerde niet wat de goede eigenschappen waren van een rooster omdat hij zoveel moest repareren. Het algoritme deed het zelfs net zo goed als het random genereren van roosters. Om de boel te redden probeerde ik het ook met 3 of 4 ouders (omdat je dan meer sessies hebt om uit te kiezen) maar ook dit werkte niet. 
