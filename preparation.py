@@ -23,6 +23,7 @@ class Course(object):
         """
         self.id = name
         self.students = students
+        self.sessions = []
 
     def numberStudents(self):
         """
@@ -62,7 +63,7 @@ class Slot(object):
         self.room = room
         self.capacity = capacity
 
-def main():
+def main(data):
     '''
     Extracts data from original CSV file (studenten_roostering).
 
@@ -78,10 +79,13 @@ def main():
     blocks = [0, 1, 2, 3]
 
     # open csv files and reads into csv-file
-    f1 = open('student_specs.csv')
+    f1 = open(data['students'].filename)
     csv_file_1 = csv.reader(f1)
-    f2 = open('course_specs.csv')
+    f2 = open(data['courses'].filename)
     csv_file_2 = csv.reader(f2)
+    f3 = open(data['rooms'].filename)
+    csv_file_3 = csv.reader(f3)
+
 
 
     # empty list for student and course objects
@@ -132,9 +136,8 @@ def main():
     session_id = 0
     # creates different session objects for every course object
     for course in course_list:
-        course_sessions = []
         num_students = course.numberStudents()
-
+        print course.id
         for course_specification in course_specifications:
             if course.id == course_specification[0]:
                 # creates lectures
@@ -143,7 +146,7 @@ def main():
                     session_type = "lecture"
                     new_lecture = Session(session_id, session_type, course.id, course.students)
                     session_id += 1
-                    course_sessions.append(new_lecture)
+                    course.sessions.append(new_lecture)
                     session_list.append(new_lecture)
                     for student in course.students:
                         student.sessions.append(new_lecture)
@@ -160,7 +163,7 @@ def main():
                         session_type = "tutorial"
                         new_tutorial = Session(session_id, session_type, course.id, students_tutorial)
                         session_id += 1
-                        course_sessions.append(new_tutorial)
+                        course.sessions.append(new_tutorial)
                         session_list.append(new_tutorial)
                         for student in students_tutorial:
                             student.sessions.append(new_tutorial)
@@ -176,13 +179,16 @@ def main():
                         session_type = "practicum"
                         new_practicum = Session(session_id, session_type, course.id, students_practicum)
                         session_id += 1
-                        course_sessions.append(new_practicum)
+                        course.sessions.append(new_practicum)
                         session_list.append(new_practicum)
                         for student in students_practicum:
                             student.sessions.append(new_practicum)
 
     # extracts the specifications of every room
-    room_specifications = [["A1.04",41], ["A1.06",22], ["C1.112",60]]
+    room_specifications = []
+    for csv_line in csv_file_3:
+        room_specifications.append(csv_line)
+    # room_specifications = [["A1.06",22], ["B2.03",40],["C1.112",60]]
 
     # creates slot objects
     slot_id = 0
@@ -194,7 +200,10 @@ def main():
                 slot_list.append(new_slot)
                 slot_id += 1
 
-    # returns list of student, session and slot objects
-    return [session_list, slot_list]
 
-main()
+    print len(session_list)
+
+    # returns list of student, session and slot objects
+    return [session_list, slot_list, course_list]
+
+# main()

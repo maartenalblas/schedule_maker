@@ -1,0 +1,25 @@
+$def with(header, table_data)
+<html>
+ <head>
+   <title>Home Page</title>
+   <style>
+   #tab {
+     text-align: center
+   }
+   </style>
+ </head>
+ <h1> Congratulations you've made a schedule without conflicts!! </h1>
+ <body>
+     <table id="tab">
+      <tr>
+      $for h in header:
+          <th>$h</th>
+      </tr>
+      $for row in table_data:
+          <tr>
+          $for d in row:
+              <td>$d</td>
+          </tr>
+      </table>
+ </body>
+</html>

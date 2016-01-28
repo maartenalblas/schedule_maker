@@ -39,7 +39,32 @@ def student_conflict(session, fitness, student_minus, student_dict):
                 student_dict[student_id].append(session.slot)
     return fitness, student_minus
 
-def main(session_list):
+def sequence_conflict(course, fitness, sequence_minus):
+
+    """ When tutorial or practimcum are scheduled before lecture points subtracted
+
+    """
+    other = []
+    lectures = []
+    for session in course.sessions:
+        if session.type == "lecture":
+            lectures.append(session)
+            if session.slot.day > 2:
+                fitness -= len(session.students)
+                sequence_minus += len(session.students)
+        else:
+            other.append(session)
+
+    for session in other:
+        for lecture in lectures:
+            if session.slot.day < lecture.slot.day:
+                fitness -= len(session.students)
+                sequence_minus += len(session.students)
+    return fitness, sequence_minus
+
+
+
+def main(session_list, course_list):
 
     """ Every succesfull seat in the schedule earns one point for fitness
 
@@ -48,6 +73,8 @@ def main(session_list):
     fitness = 0
     capacity_minus = 0
     student_minus = 0
+    sequence_minus = 0
+
 
     # all students with their timeslot will be filled
     student_dict =  {}
@@ -60,5 +87,9 @@ def main(session_list):
         # subtract 1 point of fitness when student_conflict
         fitness, student_minus = student_conflict(session, fitness, student_minus, student_dict)
 
+    for course in course_list:
+        # subtract 1 point of fitness per student of sequence_conflict
+        fitness, sequence_minus = sequence_conflict(course, fitness, sequence_minus)
 
-    return fitness, capacity_minus, student_minus
+
+    return fitness, capacity_minus, student_minus, sequence_minus
