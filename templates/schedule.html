@@ -1,16 +1,22 @@
-$def with(header, table_data)
+$def with(header, table_data, capacity_minus, student_minus, sequence_minus)
 <html>
  <head>
    <title>Home Page</title>
    <style>
-   #tab {
-     text-align: center
+   #container {
+     margin:auto;
    }
    </style>
  </head>
- <h1> Congratulations you've made a schedule without conflicts!! </h1>
  <body>
-     <table id="tab">
+   <div id="container">
+     <h2>Congratulations you've made a schedule with:</h2>
+     <ul>
+       <li>$capacity_minus Capacity conflicts</li>
+       <li>$student_minus Student conflicts</li>
+       <li>$sequence_minus Sequence conflicts</li>
+     </ul>
+     <table>
       <tr>
       $for h in header:
           <th>$h</th>
@@ -21,5 +27,6 @@ $def with(header, table_data)
               <td>$d</td>
           </tr>
       </table>
+     <div>
  </body>
 </html>

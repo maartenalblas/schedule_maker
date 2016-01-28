@@ -41,7 +41,7 @@ def prep_table(schedule):
     for session in schedule:
         day = days[session.slot.day]
         block = blocks[session.slot.block]
-        row = [session.course, session.type, day, block, session.slot.room, len(session.students), session.slot.capacity]
+        row = [session.course, session.type, day, block, session.slot.room]
         table_data.append(row)
     return table_data
 
@@ -79,7 +79,7 @@ def hill_climber(data, prep_schedule, slot_list, course_list):
         print "Sequence Conflict" + str(old_sequence_minus)
         if old_student_minus == 0 and  old_capacity_minus == 0 and old_sequence_minus == 0:
             table_data = prep_table(schedule)
-            return table_data
+            return table_data, old_capacity_minus, old_student_minus, old_sequence_minus
 
 def main(data):
     prep_schedule, slot_list, course_list = preparation.main(data)
