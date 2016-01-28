@@ -9,7 +9,7 @@ Begin van de week ben ik begonnen met het programmeren van het genetisch algorit
 
 Toen ik dat had gedaan kwam er al snel een tweede probleem om de hoek kijken. Als je twee roosters een crossover laat maken. Dus een deel van de eigenschappen van ouder 1 en een deel van ouder 2 in het nieuwe rooster. dan creer je ofwel dubbele colleges of dubbele zaalslotten. Om dit probleem aan te pakken twijfelde ik tussen twee opties: of het algoritme foute roosters laten creeren en hopen dat hij op de lange termijn met goede eigenschappen terug creert naar een correct rooster, of het rooster repareren tot een weer geldig rooster maar de enkele eigenschappen van de ouders weggooien. Met Daan afgesproken om dit probleem te bespreken. en samen hebben we besloten om een zogenaamde grindtegel crossover te doen. Deze grondtegel crossover heeft de eigenschap dat hij de minste reparaties nodig heeft. In het plaatje hieronder moeten de zwarte stipjes de vakken voorstellen van uder 1 op een bepaald tijdstip en de witten voor ouder 2.
 
-![](doc/grindtegel)
+![](doc/grindtegel.png)
 
 Week 3:
 In begin van week 3 ben ik de grindtegel crossover gaan implemeteren. Omdat de crossover vrij complex is (checken of tijdslot vrij is, als vrij dan zetten, anders andere ouder proberen, etc, etc) moest ik het allemaal strak in me hoofd houden om het algoritme juist te programmeren. Op de woensdag had ik hem af en was ik klaar om de resultaten te testen. Wat bleek het algortime leerde niet wat de goede eigenschappen waren van een rooster omdat hij zoveel moest repareren. Het algoritme deed het zelfs net zo goed als het random genereren van roosters. Om de boel te redden probeerde ik het ook met 3 of 4 ouders (omdat je dan meer sessies hebt om uit te kiezen) maar ook dit werkte niet. 
