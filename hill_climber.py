@@ -8,7 +8,6 @@ def random_schedule(rand_schedule, slot_list):
     """ Assigns random slot to every session
 
     """
-    #
     copy_list = list(slot_list)
     for session in rand_schedule:
         slot = random.choice(copy_list)
